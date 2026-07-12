@@ -33,7 +33,8 @@ st.markdown("Ask me anything about IIT Bombay course registration, grading polic
 try:
     model, index, chunks_metadata = load_resources()
 except Exception as e:
-    st.error("Could not load vector database. Did you run `ingest.py` first?")
+    # 🚨 Modified error handler to reveal the true error
+    st.error(f"Failed to load resources. The exact error is: {e}")
     st.stop()
 
 query = st.text_input("Enter your question:")
