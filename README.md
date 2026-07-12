@@ -9,9 +9,9 @@ Reason: From a personal perspective, an academic assistant would've been the mos
 ## Setup Instructions
 
 1. Install dependencies:
-   '''powershell
+   ```powershell
    pip install -r requirements.txt
-   '''
+   ```
 
 3. Set up your HuggingFace Token:
    Create a `.env` file in the root directory and add:
@@ -19,11 +19,11 @@ Reason: From a personal perspective, an academic assistant would've been the mos
    (A token has already been added for the sake of this assignment, but in case it expires, you may make your new token (permission: read) and paste it in place of the initial token
 
 4. Run the Ingestion Pipeline:
-   '''python ingest.py'''
+   ```python ingest.py```
    (This will chunk the data PDFs and create a local FAISS vector database).
 
 5. Run the Application:
-   '''streamlit run app.py'''
+   ```streamlit run app.py```
 
 ## Chunking Strategy
 For this project, I implemented a **Fixed-Size Chunking strategy** with an overlap. The documents are processed into text segments of approximately 500 characters, with a 50-character overlap between consecutive chunks.
