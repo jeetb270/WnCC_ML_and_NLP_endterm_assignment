@@ -1,7 +1,6 @@
 import streamlit as st
 import faiss
 import pickle
-import numpy as np
 import os
 from sentence_transformers import SentenceTransformer
 from huggingface_hub import InferenceClient
@@ -11,8 +10,8 @@ from dotenv import load_dotenv
 load_dotenv()
 HF_TOKEN = os.getenv("HF_TOKEN")
 
-# Initialize HuggingFace Client using a fast, capable instruct model
-client = InferenceClient(model="HuggingFaceH4/zephyr-7b-beta", token=HF_TOKEN)
+# Initialize client using the public Inference API
+client = InferenceClient(token=HF_TOKEN)
 
 # App Configuration
 st.set_page_config(page_title="IITB Academic Assistant", page_icon="🎓")
@@ -28,65 +27,47 @@ def load_resources():
     return model, index, chunks
 
 st.title("🎓 IITB Academic Assistant")
-st.markdown("Ask me anything about IIT Bombay course registration, grading policies, academic calendars, or exam rules!")
+st.markdown("Ask me anything about IIT Bombay academic documents!")
 
 try:
     model, index, chunks_metadata = load_resources()
 except Exception as e:
-    # 🚨 Modified error handler to reveal the true error
-    st.error(f"Failed to load resources. The exact error is: {e}")
+    st.error(f"Failed to load resources: {e}")
     st.stop()
 
 query = st.text_input("Enter your question:")
 
 if st.button("Ask") and query:
     with st.spinner("Searching institute documents..."):
-        # 1. Embed query and search FAISS
+        # 1. Search FAISS
         query_vector = model.encode([query]).astype('float32')
-        k = 3 # Retrieve top 3 chunks
-        distances, indices = index.search(query_vector, k)
+        k = 3
+        _, indices = index.search(query_vector, k)
         
-        retrieved_contexts = []
-        sources = []
-        for idx in indices[0]:
-            chunk = chunks_metadata[idx]
-            retrieved_contexts.append(chunk["text"])
-            sources.append(chunk["source"])
-            
+        retrieved_contexts = [chunks_metadata[idx]["text"] for idx in indices[0]]
         context_string = "\n\n".join(retrieved_contexts)
         
-        # 2. Construct strict prompt
-        prompt = f"""<|system|>
-You are a helpful Academic Assistant for IIT Bombay students. 
-Answer the user's question based strictly on the provided context. 
-If the answer is not in the context, you must output exactly: "I don't know based on the provided documents."
-Do not guess or use outside knowledge.
-Context:
-{context_string}
-</s>
-<|user|>
-{query}
-</s>
-<|assistant|>
-"""
-        # 3. Call LLM via HuggingFace
+        # 2. Call LLM using the most stable supported model
         try:
-            response = client.text_generation(prompt, max_new_tokens=256, temperature=0.1)
+            response = client.chat_completion(
+                model="meta-llama/Llama-3.1-8B-Instruct",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": "You are a helpful Academic Assistant. Answer based strictly on the context. If the answer is not in the context, output: 'I don't know based on the provided documents.' After each answer, you must provide the source for your information as well. In the last line, you must display the source like so: 'source: <link>'."
+                    },
+                    {
+                        "role": "user", 
+                        "content": f"Context:\n{context_string}\n\nQuestion: {query}"
+                    }
+                ],
+                max_tokens=256,
+                temperature=0.1
+            )
             
-            # 4. Display results
             st.subheader("Answer:")
-            st.write(response)
+            st.write(response.choices[0].message.content)
             
-            st.subheader("Sources used:")
-            unique_sources = list(set(sources))
-            for source in unique_sources:
-                st.write(f"- {source}")
-                
-            with st.expander("View Retrieved Context Chunks"):
-                for i, ctx in enumerate(retrieved_contexts):
-                    st.write(f"**Chunk {i+1} from {sources[i]}:**")
-                    st.write(ctx)
-                    st.markdown("---")
-                    
         except Exception as e:
             st.error(f"Error calling LLM: {e}")
+            st.info("If this persists, the free-tier API may be experiencing high traffic. Please try again later.")
