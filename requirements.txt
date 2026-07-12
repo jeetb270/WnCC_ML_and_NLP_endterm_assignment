@@ -1,6 +1,7 @@
 streamlit
 sentence-transformers
 faiss-cpu
-PyPDF2
+PyMuPDF
 huggingface_hub
 python-dotenv
+torchvision
