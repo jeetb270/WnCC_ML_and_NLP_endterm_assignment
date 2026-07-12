@@ -9,18 +9,20 @@ Reason: From a personal perspective, an academic assistant would've been the mos
 ## Setup Instructions
 
 1. Install dependencies:
-   '''pip install -r requirements.txt'''
+   '''powershell
+   pip install -r requirements.txt
+   '''
 
-2. Set up your HuggingFace Token:
+3. Set up your HuggingFace Token:
    Create a `.env` file in the root directory and add:
    HF_TOKEN=your_token_here
    (A token has already been added for the sake of this assignment, but in case it expires, you may make your new token (permission: read) and paste it in place of the initial token
 
-3. Run the Ingestion Pipeline:
+4. Run the Ingestion Pipeline:
    '''python ingest.py'''
    (This will chunk the data PDFs and create a local FAISS vector database).
 
-4. Run the Application:
+5. Run the Application:
    '''streamlit run app.py'''
 
 ## Chunking Strategy
