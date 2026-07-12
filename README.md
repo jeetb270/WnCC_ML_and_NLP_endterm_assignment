@@ -3,8 +3,10 @@
 
 A Retrieval-Augmented Generation (RAG) powered AI assistant designed to answer questions about IIT Bombay's academic policies, grading, and course registration without hallucinating.
 
-Chosen Scope: Academic assistant
-Reason: From a personal perspective, an academic assistant would've been the most helpful for me considering how often I found myself searching through fragmented PDFs and institute emails just to clarify basic examination rules.
+* **Chosen Scope:** Academic assistant
+* **Reason:** From a personal perspective, an academic assistant would've been the most helpful for me considering how often I found myself searching through fragmented PDFs and institute emails just to clarify basic examination rules.
+
+---
 
 ## Setup Instructions
 
@@ -29,6 +31,8 @@ Reason: From a personal perspective, an academic assistant would've been the mos
    streamlit run app.py
    ```
 
+---
+
 ## Chunking Strategy
 For this project, I implemented a **Fixed-Size Chunking strategy** with an overlap. The documents are processed into text segments of approximately 500 characters, with a 50-character overlap between consecutive chunks.
 
@@ -37,4 +41,11 @@ For this project, I implemented a **Fixed-Size Chunking strategy** with an overl
 *   **Search Accuracy**: By maintaining consistent, granular chunk sizes, the vector search (FAISS) can return highly specific document passages. This ensures that the context provided to the LLM is relevant to the user's specific query rather than bloated with irrelevant institute-wide data.
 *   **Efficiency**: Given the constraints of the free-tier API, keeping the context window compact while maximizing information density is essential for reliable, low-latency performance.
 
+---
 
+## Limitations
+
+*   **Dependency on Free-Tier API Availability:** Because the application relies on the free Hugging Face Serverless Inference API, it is subject to rate limits, provider-side routing changes, and temporary model downtime during peak traffic hours.
+*   **Static Information Scope:** The assistant's knowledge is entirely dependent on the local documents processed during the ingestion phase (`ingest.py`). It cannot dynamically fetch real-time updates from the IITB website, academic portals, or live email broadcasts.
+*   **Context Window Constraints:** To guarantee low latency and avoid API token overflows, the retrieval is capped at the top 3 chunks ($k=3$), and the generation length is constrained (`max_tokens=256`). Highly complex queries requiring cross-referencing over multiple disparate rulebooks might provide incomplete summaries.
+*   **Fixed Character Boundary Limitations:** While the 50-character overlap mitigates context loss, rigid 500-character chunking can still occasionally split complex academic tables, fee structures, or bulleted lists mid-sentence, reducing retrieval readability.
