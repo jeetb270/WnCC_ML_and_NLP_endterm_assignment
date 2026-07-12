@@ -1,6 +1,6 @@
 import os
 import pickle
-from PyPDF2 import PdfReader
+import fitz  # This is PyMuPDF
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
@@ -14,11 +14,16 @@ CHUNK_OVERLAP = 50
 
 def get_pdf_text(filepath):
     text = ""
-    reader = PdfReader(filepath)
-    for page in reader.pages:
-        page_text = page.extract_text()
-        if page_text:
-            text += page_text + " "
+    try:
+        # Open the document using PyMuPDF
+        doc = fitz.open(filepath)
+        for page in doc:
+            extracted = page.get_text()
+            if extracted:
+                text += extracted + " "
+    except Exception as e:
+        print(f"❌ Error reading {os.path.basename(filepath)}: {e}")
+        return None
     return text
 
 def chunk_text(text, filename):
@@ -47,12 +52,18 @@ def main():
         if filename.endswith(".pdf"):
             filepath = os.path.join(DATA_DIR, filename)
             text = get_pdf_text(filepath)
+            
+            # Safely skip unreadable files
+            if not text:
+                print(f"⚠️ Skipping {filename}: Could not extract text.")
+                continue
+                
             file_chunks = chunk_text(text, filename)
             all_chunks.extend(file_chunks)
             print(f"Processed {filename}: {len(file_chunks)} chunks.")
 
     if not all_chunks:
-        print("No chunks created. Make sure you have PDFs in the data folder.")
+        print("No chunks created. Make sure you have valid PDFs in the data folder.")
         return
 
     print("Generating embeddings...")
