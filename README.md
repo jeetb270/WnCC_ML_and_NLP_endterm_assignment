@@ -49,3 +49,10 @@ For this project, I implemented a **Fixed-Size Chunking strategy** with an overl
 *   **Static Information Scope:** The assistant's knowledge is entirely dependent on the local documents processed during the ingestion phase (`ingest.py`). It cannot dynamically fetch real-time updates from the IITB website, academic portals, or live email broadcasts.
 *   **Context Window Constraints:** To guarantee low latency and avoid API token overflows, the retrieval is capped at the top 3 chunks ($k=3$), and the generation length is constrained (`max_tokens=256`). Highly complex queries requiring cross-referencing over multiple disparate rulebooks might provide incomplete summaries.
 *   **Fixed Character Boundary Limitations:** While the 50-character overlap mitigates context loss, rigid 500-character chunking can still occasionally split complex academic tables, fee structures, or bulleted lists mid-sentence, reducing retrieval readability.
+
+## Data Sources
+
+* UG Rule-Book
+* Academic Calendar for 2026-27
+* Autumn Semester Time-Table
+* Fee Circular 
